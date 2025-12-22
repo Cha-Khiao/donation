@@ -1,5 +1,5 @@
 // src/app/layout.tsx
-import './globals.scss'; // เปลี่ยนจาก .css เป็น .scss
+import './globals.scss';
 import { Kanit } from 'next/font/google';
 import ThemeProvider from '@/components/ThemeProvider';
 import Navbar from '@/components/Navbar';
