@@ -2,10 +2,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Container, Table, Button, Badge, Card, Row, Col, Spinner, Tab, Tabs } from 'react-bootstrap';
+import { Container, Table, Button, Badge, Card, Spinner, Tab, Tabs } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import ReceiveModal from './ReceiveModal';
 import DistributeModal from './DistributeModal';
+import SummaryChart from '@/components/SummaryChart';
 
 export default function AdminPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -48,12 +49,8 @@ export default function AdminPage() {
 
     if (result.isConfirmed) {
       try {
-        // เราต้องมี API approve แต่เพื่อความด่วน เราจะใช้ API เดิมแต่แก้ logic ฝั่ง Server หรือ 
-        // ทำแบบง่าย: ยิง API ไปแก้ status (ในที่นี้เราต้องสร้าง API PUT เพิ่ม แต่ถ้าไม่มีเวลา ใช้การยิงรับเข้าใหม่ซ้ำแล้วลบอันเก่า ก็ได้)
-        // **วิธีที่ถูกต้องในเวลาจำกัด:** เพิ่ม Route PUT /api/transactions/[id]
-        
-        // *ในไฟล์นี้ผมจะสมมติว่ามี Route นี้แล้ว (เดี๋ยวพาไปสร้าง)*
-        await fetch(`/api/transactions/${transId}`, { method: 'PUT' });
+        const res = await fetch(`/api/transactions/${transId}`, { method: 'PUT' });
+        if (!res.ok) throw new Error('Failed');
         
         Swal.fire('สำเร็จ', 'นำของเข้าสต็อกเรียบร้อย', 'success');
         fetchData();
@@ -87,6 +84,9 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* กราฟแสดงผล (เพิ่มใหม่) */}
+      {!loading && <SummaryChart items={items} />}
+
       {/* Tabs Menu */}
       <Card className="shadow-sm border-0">
         <Card.Body>
@@ -106,7 +106,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
+                    {items.length > 0 ? items.map((item) => (
                       <tr key={item._id}>
                         <td className="fw-bold">{item.name}</td>
                         <td><Badge bg="light" text="dark" className="border">{item.category}</Badge></td>
@@ -116,7 +116,9 @@ export default function AdminPage() {
                         <td className="text-center text-muted">{item.unit}</td>
                         <td className="text-muted small">{formatDate(item.updatedAt)}</td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr><td colSpan={5} className="text-center text-muted py-4">ไม่มีสินค้าในคลัง</td></tr>
+                    )}
                   </tbody>
                 </Table>
               )}
@@ -172,7 +174,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {historyLogs.map(t => (
+                    {historyLogs.length > 0 ? historyLogs.map(t => (
                       <tr key={t._id}>
                         <td>{formatDate(t.createdAt)}</td>
                         <td>
@@ -190,7 +192,9 @@ export default function AdminPage() {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr><td colSpan={5} className="text-center py-4 text-muted">ยังไม่มีประวัติรายการ</td></tr>
+                    )}
                   </tbody>
                 </Table>
             </Tab>
